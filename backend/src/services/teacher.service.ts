@@ -45,7 +45,7 @@ export async function getActiveTeachers(filters: TeacherFilters): Promise<Pagina
     ];
   }
 
-  const [data, total] = await Promise.all([
+  const [users, total] = await Promise.all([
     User.find(query)
       .select('name email avatarUrl teacherProfile')
       .populate('teacherProfile.courses', 'name category')
@@ -54,6 +54,14 @@ export async function getActiveTeachers(filters: TeacherFilters): Promise<Pagina
       .limit(limit),
     User.countDocuments(query),
   ]);
+
+  // Flatten teacherProfile into the top-level so the frontend TeacherCard
+  // can access headline, bio, hourlyRate, courses, etc. directly.
+  // Must use toObject() — spreading a Mongoose subdocument doesn't enumerate fields.
+  const data = users.map((u) => {
+    const { teacherProfile, ...rest } = u.toObject();
+    return { ...rest, ...(teacherProfile ?? {}) };
+  });
 
   return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
 }

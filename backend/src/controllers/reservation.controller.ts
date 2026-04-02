@@ -9,12 +9,13 @@ import type { ReservationStatus } from '../types';
 export const createReservation = asyncHandler(async (req: AuthRequest, res: Response) => {
   if (!req.user) return sendError(res, 'Not authenticated', 401);
 
-  const { teacherId, courseId, date, startTime, notes } = req.body as {
+  const { teacherId, courseId, date, startTime, notes, durationMinutes } = req.body as {
     teacherId: string;
     courseId: string;
     date: string;
     startTime: string;
     notes?: string;
+    durationMinutes?: number;
   };
 
   const reservation = await reservationService.createReservation(req.user._id, {
@@ -23,6 +24,7 @@ export const createReservation = asyncHandler(async (req: AuthRequest, res: Resp
     date,
     startTime,
     notes,
+    durationMinutes,
   });
 
   return sendSuccess(res, reservation, 'Reservation created', 201);

@@ -2,7 +2,7 @@ import mongoose, { Types } from 'mongoose';
 import { Reservation, IReservation } from '../models/Reservation';
 import { User } from '../models/User';
 import { Course } from '../models/Course';
-import { isSlotAvailable } from '../utils/slots';
+import { getAvailableSlotsForDate } from '../utils/slots';
 import { createNotification } from './notification.service';
 import { parseISO, format } from 'date-fns';
 import type { PaginatedResult, ReservationStatus } from '../types';
@@ -14,7 +14,7 @@ function timeToMinutes(t: string) {
 
 export async function createReservation(
   studentId: Types.ObjectId,
-  data: { teacherId: string; courseId: string; date: string; startTime: string; notes?: string }
+  data: { teacherId: string; courseId: string; date: string; startTime: string; notes?: string; durationMinutes?: number }
 ): Promise<IReservation> {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -33,20 +33,6 @@ export async function createReservation(
     const course = await Course.findOne({ _id: data.courseId, isActive: true }).session(session);
     if (!course) throw new Error('Course not found or inactive');
 
-    // Check slot availability (includes existing reservations check)
-    const teacherObjectId = new Types.ObjectId(data.teacherId);
-    const available = await isSlotAvailable(teacherObjectId, data.date, data.startTime);
-    if (!available) throw new Error('This time slot is not available');
-
-    // Check for concurrent booking — lock with findOne during transaction
-    const conflicting = await Reservation.findOne({
-      teacher: data.teacherId,
-      date: parseISO(data.date),
-      startTime: data.startTime,
-      status: { $in: ['pending_payment_upload', 'pending_review', 'confirmed'] },
-    }).session(session);
-    if (conflicting) throw new Error('This slot was just booked by another student');
-
     // Get slot duration from weekly availability
     const { WeeklyAvailability } = await import('../models/WeeklyAvailability');
     const parsedDate = parseISO(data.date);
@@ -57,10 +43,38 @@ export async function createReservation(
       isActive: true,
     }).session(session);
 
-    const durationMinutes = weeklySlot?.slotDurationMinutes || 60;
+    const slotUnit = weeklySlot?.slotDurationMinutes || 60;
+
+    // Validate requested duration is a positive multiple of slotUnit
+    let durationMinutes = slotUnit;
+    if (data.durationMinutes) {
+      if (data.durationMinutes % slotUnit !== 0 || data.durationMinutes < slotUnit) {
+        throw new Error(`Duration must be a multiple of ${slotUnit} minutes`);
+      }
+      durationMinutes = data.durationMinutes;
+    }
+
     const startMin = timeToMinutes(data.startTime);
     const endMin = startMin + durationMinutes;
     const endTime = `${String(Math.floor(endMin / 60)).padStart(2, '0')}:${String(endMin % 60).padStart(2, '0')}`;
+
+    // Check all required slots are available (one per slotUnit within the range)
+    const teacherObjectId = new Types.ObjectId(data.teacherId);
+    const availableSlots = await getAvailableSlotsForDate(teacherObjectId, data.date);
+    for (let t = startMin; t < endMin; t += slotUnit) {
+      const slotTime = `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`;
+      const slot = availableSlots.find((s) => s.startTime === slotTime);
+      if (!slot?.available) throw new Error(`Time slot ${slotTime} is not available`);
+    }
+
+    // Check for concurrent booking across the full time range
+    const conflicting = await Reservation.findOne({
+      teacher: data.teacherId,
+      date: parseISO(data.date),
+      startTime: { $gte: data.startTime, $lt: endTime },
+      status: { $in: ['pending_payment_upload', 'pending_review', 'confirmed'] },
+    }).session(session);
+    if (conflicting) throw new Error('This slot was just booked by another student');
 
     const [reservation] = await Reservation.create(
       [

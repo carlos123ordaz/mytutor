@@ -42,7 +42,7 @@ app.use(passport.initialize());
 
 // Rate limiting on /api
 const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 10000, // 15 minutes
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
