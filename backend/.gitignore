@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+.env.*
+*.log
+*.tsbuildinfo
+uploads/
+service-account*.json
+gcs-credentials*.json

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed -i \"1{/^import React from 'react';$/d}\" src/pages/Dashboard.tsx)",
+      "Bash(sed -i \"/^import { Skeleton } from '\\\\.\\\\.\\\\/components\\\\/ui\\\\/Skeleton';$/d\" src/pages/Dashboard.tsx)",
+      "Bash(sed -i \"s/formatter={\\(value: number\\) => \\\\[value, 'Reservations'\\\\]}/formatter={\\(value\\) => [value ?? 0, 'Reservations']}/\" src/pages/Dashboard.tsx)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

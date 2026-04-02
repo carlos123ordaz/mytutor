@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc:*)",
+      "Bash(grep -h \"export\" \"C:/Users/carlo/OneDrive/Imágenes/Documentos/mytutor/backend/src/services\"/*.ts)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(./node_modules/.bin/tailwindcss init:*)",
+      "Bash(\"C:/Users/carlo/OneDrive/Imágenes/Documentos/mytutor/frontend-admin/.env\":*)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(npm run:*)",
+      "Bash(cd:*)",
+      "Bash(find \"C:/Users/carlo/OneDrive/Imágenes/Documentos/mytutor/backend/src/routes\" -name \"teacher.routes.ts\" -exec cat {} \\\\;)",
+      "Bash(xargs grep:*)"
+    ]
+  }
+}

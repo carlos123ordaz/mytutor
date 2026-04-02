@@ -1,0 +1,42 @@
+# ─── OS / editors ────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# ─── Environment files (never commit secrets) ────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.env
+
+# ─── Dependencies ────────────────────────────────────────────────────────────
+node_modules/
+
+# ─── Build outputs ───────────────────────────────────────────────────────────
+dist/
+build/
+out/
+
+# ─── Next.js ─────────────────────────────────────────────────────────────────
+.next/
+.vercel/
+
+# ─── Vite ────────────────────────────────────────────────────────────────────
+frontend-admin/dist/
+
+# ─── Logs ────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── TypeScript ──────────────────────────────────────────────────────────────
+*.tsbuildinfo
+
+# ─── GCS / service account credentials ──────────────────────────────────────
+*.json.key
+service-account*.json
+gcs-credentials*.json
